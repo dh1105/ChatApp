@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.chat.LogIn">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/username"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="112dp"
+            android:ems="10"
+            android:hint="Enter username"
+            android:inputType="textPersonName" />
+
+        <EditText
+            android:id="@+id/pass"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/username"
+            android:layout_alignStart="@+id/username"
+            android:layout_below="@+id/username"
+            android:layout_marginTop="21dp"
+            android:ems="10"
+            android:hint="Enter password"
+            android:inputType="textPassword" />
+
+        <Button
+            android:id="@+id/sign_in"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignEnd="@+id/pass"
+            android:layout_alignRight="@+id/pass"
+            android:layout_below="@+id/pass"
+            android:layout_marginTop="21dp"
+            android:text="Sign in " />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="35dp"
+            android:text="Not a member? "
+            android:layout_below="@+id/sign_in"
+            android:layout_centerHorizontal="true" />
+
+        <Button
+            android:id="@+id/Reg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Register now "
+            android:layout_marginTop="19dp"
+            android:layout_below="@+id/textView"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+
+</ScrollView>
