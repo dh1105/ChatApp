@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
                     h.postDelayed(new Runnable() {
                         @Override
                         public void run() {
+                            processStopService();
                             Intent i=new Intent(MainActivity.this, Chat.class);
                             startActivity(i);
                             finish();
@@ -54,6 +55,11 @@ public class MainActivity extends AppCompatActivity {
                 // ...
             }
         };
+    }
+
+    private void processStopService() {
+        Intent intent = new Intent(getApplicationContext(), NotifManager.class);
+        stopService(intent);
     }
 
     @Override

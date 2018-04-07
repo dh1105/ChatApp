@@ -14,6 +14,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -33,6 +34,7 @@ public class NotifManager extends Service implements ChildEventListener{
     FirebaseAuth mAuth;
     FirebaseUser user;
     private DatabaseReference mDatabase;
+    public static final String TAG = "NotifManager";
 
     @Nullable
     @Override
@@ -60,7 +62,6 @@ public class NotifManager extends Service implements ChildEventListener{
         //mDatabase.child("messages").addChildEventListener(this);
         Query lastQuery = mDatabase.child("messages").orderByKey().limitToLast(1);
         lastQuery.addChildEventListener(this);
-        //return super.onStartCommand(intent, flags, startId);
         return START_STICKY;
     }
 
@@ -83,7 +84,7 @@ public class NotifManager extends Service implements ChildEventListener{
         String to = ds.getValue(Message.class).getTo();
         boolean b = Boolean.parseBoolean(to);
         Log.d("User: ", user.getEmail());
-        if (!m.getFromName().equals(user.getEmail()) && !b){
+        if (!m.getFromName().equals(user.getEmail()) && !b && !Helper.isAppRunning(getApplicationContext())){
             Log.d("VaL: ", "false");
             sendNotif(fromName, me, time);
             m.setSelf(false);
@@ -96,8 +97,10 @@ public class NotifManager extends Service implements ChildEventListener{
 
     @Override
     public void onDestroy() {
+        //stopSelf();
+        Log.d("Notif service ", "onDestroy()");
+        //Toast.makeText(getApplicationContext(), "Service onDestroy called", Toast.LENGTH_LONG).show();
         super.onDestroy();
-        Log.d("Notif ", "onDestroy()");
         //stopSelf();
     }
 

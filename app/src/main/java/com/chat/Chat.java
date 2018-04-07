@@ -71,6 +71,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
 //        downloadMessage.execute();
         //DisplayMessage();
         String k;
+        processStopService();
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -87,11 +88,17 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         });
         mDatabase.child("messages").addChildEventListener(this);
         //UpdateUI();
-        if(isMyServiceRunning(NotifManager.class)) {
-            Log.d("Stop: ", "service");
-            in = new Intent(this, NotifManager.class);
-            stopService(in);
-        }
+        System.out.println("Notif service running onCreate "+ isMyServiceRunning(NotifManager.class)+"");
+    }
+
+    private void processStartService() {
+        Intent intent = new Intent(getApplicationContext(), NotifManager.class);
+        startService(intent);
+    }
+
+    private void processStopService() {
+        Intent intent = new Intent(getApplicationContext(), NotifManager.class);
+        stopService(intent);
     }
 
     @Override
@@ -103,11 +110,8 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     @Override
     protected void onResume() {
         super.onResume();
-        if(isMyServiceRunning(NotifManager.class)) {
-            Log.d("Stop: ", "service");
-            in = new Intent(this, NotifManager.class);
-            stopService(in);
-        }
+        System.out.println("Notif service running onResume "+ isMyServiceRunning(NotifManager.class)+"");
+        //processStopService();
     }
 
     @Override
@@ -117,8 +121,9 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
             case R.id.sign_out:
                 FirebaseAuth.getInstance().signOut();
                 Log.d("Stop: ", "service");
-                in=new Intent(this, NotifManager.class);
-                stopService(in);
+//                in=new Intent(this, NotifManager.class);
+//                stopService(in);
+                processStopService();
                 Intent i=new Intent(this, LogIn.class);
                 startActivity(i);
                 finish();
@@ -178,9 +183,10 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     protected void onDestroy() {
         super.onDestroy();
         if(mAuth.getCurrentUser()!=null){
-            in=new Intent(this, NotifManager.class);
-            Log.d("Service onDestroy(): ", "started");
-            startService(in);
+//            in=new Intent(this, NotifManager.class);
+//            Log.d("Service onDestroy(): ", "started");
+//            startService(in);
+            processStartService();
         }
     }
 
@@ -188,9 +194,10 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     protected void onStop() {
         super.onStop();
         if(mAuth.getCurrentUser()!=null){
-            in=new Intent(this, NotifManager.class);
-            Log.d("Service onStop(): ", "started");
-            startService(in);
+//            in=new Intent(this, NotifManager.class);
+//            Log.d("Service onStop(): ", "started");
+//            startService(in);
+            processStartService();
         }
     }
 
@@ -208,6 +215,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         String time = ds.getValue(Message.class).getTime();
         String to = ds.getValue(Message.class).getTo();
         Boolean b = Boolean.parseBoolean(to);
+        Log.d("Message seen user: ", String.valueOf(b));
         m.setFromName(fromName);
         m.setMessage(me);
         m.setDate(date);
@@ -243,11 +251,11 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
             if (serviceClass.getName().equals(service.service.getClassName())) {
-                Log.i ("Notif ServiceRunning", true+"");
+                //Log.i ("Notif ServiceRunning", true+"");
                 return true;
             }
         }
-        Log.i ("Notif ServiceRunning", false+"");
+        //Log.i ("Notif ServiceRunning", false+"");
         return false;
     }
 
