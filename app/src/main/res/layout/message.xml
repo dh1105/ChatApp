@@ -26,16 +26,16 @@
             android:layout_marginLeft="2pt"
             android:layout_marginRight="2pt"
             android:layout_marginTop="2pt"
+            android:autoLink="all"
+            android:clickable="true"
             android:editable="false"
+            android:focusable="true"
             android:gravity="center_vertical"
+            android:linksClickable="true"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
             android:text="message"
-            android:textSize="10pt"
-            android:focusable="true"
-            android:clickable="true"
-            android:autoLink="web"
-            android:linksClickable="true"/>
+            android:textSize="10pt" />
 
         <TextView
             android:id="@+id/timeTextView"

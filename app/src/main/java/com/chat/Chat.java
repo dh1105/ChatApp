@@ -162,15 +162,15 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
                 }
                 String mes=mymsg.getText().toString();
                 LinkExtractor linkExtractor = LinkExtractor.builder()
-                        .linkTypes(EnumSet.of(LinkType.URL, LinkType.EMAIL, LinkType.WWW)) // limit to URLs
+                        .linkTypes(EnumSet.of(LinkType.URL, LinkType.EMAIL, LinkType.WWW))
                         .build();
                 Iterable<LinkSpan> links = linkExtractor.extractLinks(mes);
                 String result = Autolink.renderLinks(mes, links, new LinkRenderer() {
                     @Override
                     public void render(LinkSpan link, CharSequence text, StringBuilder sb) {
-                        sb.append("<a href=\"");
+                        sb.append("<a href=");
                         sb.append(text, link.getBeginIndex(), link.getEndIndex());
-                        sb.append("\">");
+                        sb.append(">");
                         sb.append(text, link.getBeginIndex(), link.getEndIndex());
                         sb.append("</a>");
                     }
