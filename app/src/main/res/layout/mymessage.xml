@@ -34,7 +34,11 @@
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
             android:text="message"
-            android:textSize="10pt" />
+            android:textSize="10pt"
+            android:focusable="true"
+            android:clickable="true"
+            android:autoLink="web"
+            android:linksClickable="true"/>
 
         <TextView
             android:id="@+id/mytimeTextView"

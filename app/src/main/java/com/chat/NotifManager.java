@@ -1,5 +1,6 @@
 package com.chat;
 
+import android.app.AlarmManager;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -62,6 +63,7 @@ public class NotifManager extends Service implements ChildEventListener{
         //mDatabase.child("messages").addChildEventListener(this);
         Query lastQuery = mDatabase.child("messages").orderByKey().limitToLast(1);
         lastQuery.addChildEventListener(this);
+        //Toast.makeText(getApplicationContext(), "Service onStartCommand called", Toast.LENGTH_SHORT).show();
         return START_STICKY;
     }
 
@@ -99,9 +101,25 @@ public class NotifManager extends Service implements ChildEventListener{
     public void onDestroy() {
         //stopSelf();
         Log.d("Notif service ", "onDestroy()");
-        //Toast.makeText(getApplicationContext(), "Service onDestroy called", Toast.LENGTH_LONG).show();
+        //Toast.makeText(getApplicationContext(), "Service onDestroy called", Toast.LENGTH_SHORT).show();
         super.onDestroy();
         //stopSelf();
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+
+//        Toast.makeText(getApplicationContext(), "Service onTaskRemoved called", Toast.LENGTH_SHORT).show();
+//
+//        PendingIntent service = PendingIntent.getService(
+//                getApplicationContext(),
+//                1001,
+//                new Intent(getApplicationContext(), NotifManager.class),
+//                PendingIntent.FLAG_ONE_SHOT);
+//
+//        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+//        alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, 1000, service);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)

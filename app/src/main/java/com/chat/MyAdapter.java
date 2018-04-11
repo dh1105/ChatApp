@@ -2,6 +2,8 @@ package com.chat;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -86,7 +88,14 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 TextView mytimeView = viewholder1.mytimeTextView;
                 mytimeView.setText(messages.get(position).getTime());
                 TextView mymsgView = viewholder1.mymessageTextView;
-                mymsgView.setText(messages.get(position).getMessage());
+                mymsgView.setClickable(true);
+                mymsgView.setMovementMethod(LinkMovementMethod.getInstance());
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    mymsgView.setText(Html.fromHtml(messages.get(position).getMessage(), Html.FROM_HTML_MODE_LEGACY));
+                } else {
+                    mymsgView.setText(Html.fromHtml(messages.get(position).getMessage()));
+                }
+                //mymsgView.setText(messages.get(position).getMessage());
                 break;
 
             case VIEW_HOLDER_TYPE_2:
@@ -94,7 +103,14 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 TextView timeView = viewholder2.timeTextView;
                 timeView.setText(messages.get(position).getTime());
                 TextView msgView = viewholder2.messageTextView;
-                msgView.setText(messages.get(position).getMessage());
+                msgView.setClickable(true);
+                msgView.setMovementMethod(LinkMovementMethod.getInstance());
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+                    msgView.setText(Html.fromHtml(messages.get(position).getMessage(), Html.FROM_HTML_MODE_LEGACY));
+                } else {
+                    msgView.setText(Html.fromHtml(messages.get(position).getMessage()));
+                }
+                //msgView.setText(messages.get(position).getMessage());
                 break;
 
             default:

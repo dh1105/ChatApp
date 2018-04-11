@@ -1,7 +1,7 @@
 package com.chat;
 
 import android.app.ActivityManager;
-import android.app.ProgressDialog;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,15 +9,17 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
+import org.nibor.autolink.*;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -31,8 +33,11 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.EnumSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class Chat extends AppCompatActivity implements View.OnClickListener, ChildEventListener {
+public class Chat extends AppCompatActivity implements View.OnClickListener, ChildEventListener, ActionMode.Callback {
 
     FirebaseAuth mAuth;
     EditText mymsg;
@@ -45,6 +50,8 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     private DatabaseReference mDatabase;
     ProgressBar data;
     Intent in;
+    private ActionMode actionMode;
+    public static final String URL_REGEX = "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +73,8 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         ln.setStackFromEnd(true);
         messageList.setLayoutManager(ln);
         messageList.setAdapter(mAdapter);
+        NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancelAll();
         mDatabase = FirebaseDatabase.getInstance().getReference();
 //        DownloadMessage downloadMessage=new DownloadMessage();
 //        downloadMessage.execute();
@@ -90,6 +99,8 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         //UpdateUI();
         System.out.println("Notif service running onCreate "+ isMyServiceRunning(NotifManager.class)+"");
     }
+
+
 
     private void processStartService() {
         Intent intent = new Intent(getApplicationContext(), NotifManager.class);
@@ -150,7 +161,21 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
                     break;
                 }
                 String mes=mymsg.getText().toString();
-                Message message = new Message(user.getEmail(), mes, getDate(), getTime(), String.valueOf(false));
+                LinkExtractor linkExtractor = LinkExtractor.builder()
+                        .linkTypes(EnumSet.of(LinkType.URL, LinkType.EMAIL, LinkType.WWW)) // limit to URLs
+                        .build();
+                Iterable<LinkSpan> links = linkExtractor.extractLinks(mes);
+                String result = Autolink.renderLinks(mes, links, new LinkRenderer() {
+                    @Override
+                    public void render(LinkSpan link, CharSequence text, StringBuilder sb) {
+                        sb.append("<a href=\"");
+                        sb.append(text, link.getBeginIndex(), link.getEndIndex());
+                        sb.append("\">");
+                        sb.append(text, link.getBeginIndex(), link.getEndIndex());
+                        sb.append("</a>");
+                    }
+                });
+                Message message = new Message(user.getEmail(), result, getDate(), getTime(), String.valueOf(false));
                 message.setSelf(true);
                 mDatabase.child("messages").push().setValue(message);
 //                messages.add(message);
@@ -230,7 +255,11 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
             m.setSelf(false);
         }
         m.setTo(String.valueOf(b));
-        System.out.printf("TO MSG: "+b);
+        Pattern p = Pattern.compile(URL_REGEX);
+        Matcher ma = p.matcher(m.getMessage());
+        if(ma.find()) {
+            System.out.println("String contains URL");
+        }
         mDatabase.child("messages").child(ds.getKey()).setValue(m);
         messages.add(m);
         UpdateUI();
@@ -278,76 +307,37 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
 
     }
 
-//    private class DownloadMessage extends AsyncTask<Void, Void, Void>{
-//
-//        @Override
-//        protected void onPreExecute() {
-//            super.onPreExecute();
-//            p=new ProgressDialog(Chat.this);
-//            p.setIndeterminate(true);
-//            p.setMessage("Loading..");
-//            p.setCancelable(false);
-//            p.show();
-//        }
-//
-//        @Override
-//        protected Void doInBackground(Void... params) {
-//            mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-//                @Override
-//                public void onDataChange(DataSnapshot dataSnapshot) {
-//                    if(dataSnapshot!=null) {
-//                        DataSnapshot d=dataSnapshot.child("messages");
-//                        for (DataSnapshot ds : d.getChildren()) {
-//                            Message m = ds.getValue(Message.class);
-//                            Log.d("MESS: ", m.toString());
-//                            Log.d("UID: ", uid);
-//                            String fromName = ds.getValue(Message.class).getFromName();
-//                            Log.d("From: ", fromName);
-//                            String me = ds.getValue(Message.class).getMessage();
-//                            Log.d("Mess: ", me);
-//                            String date = ds.getValue(Message.class).getDate();
-//                            String time = ds.getValue(Message.class).getTime();
-//                            m.setFromName(fromName);
-//                            m.setMessage(me);
-//                            m.setDate(date);
-//                            m.setTime(time);
-//                            if (m.getFromName().equals(user.getEmail())){
-//                                Log.d("VaL: ", "true");
-//                                m.setSelf(true);
-//                            }
-//                            else {
-//                                Log.d("VaL: ", "false");
-//                                m.setSelf(false);
-//                            }
-//                            messages.add(m);
-//                        }
-//                        mAdapter.notifyDataSetChanged();
-//                        messageList.scrollToPosition(messages.size() - 1);
-//                    }
+    @Override
+    public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+        getMenuInflater().inflate(R.menu.action_mode, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+        return false;
+    }
+
+    @Override
+    public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+        switch (menuItem.getItemId()){
+            case R.id.copy:
+//                ArrayList<String> copied_mes = new ArrayList<>();
+//                for(int i=0; i<messages.size(); i++){
+//                    copied_mes.add(messages.get(i).getMessage());
 //                }
-//
-//                @Override
-//                public void onCancelled(DatabaseError databaseError) {
-//
-//                }
-//            });
-//            return null;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Void aVoid) {
-//            super.onPostExecute(aVoid);
-//            //updateUI();
-//            p.dismiss();
-//            //mAdapter.notifyDataSetChanged();
-//        }
-////
-////        private void updateUI() {
-////            LinearLayout msgDisp, ipDisp;
-////            msgDisp=(LinearLayout) findViewById(R.id.msgDisp);
-////            ipDisp=(LinearLayout) findViewById(R.id.ipDisp);
-////            msgDisp.setVisibility(View.VISIBLE);
-////            ipDisp.setVisibility(View.VISIBLE);
-////        }
-//    }
+//                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//                ClipData clip = ClipData.newPlainText(label, text);
+//                clipboard.setPrimaryClip(clip);
+        }
+        return false;
+    }
+
+
+
+    @Override
+    public void onDestroyActionMode(ActionMode Mode) {
+        actionMode = null;
+
+    }
 }
