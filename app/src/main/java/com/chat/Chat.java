@@ -161,21 +161,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
                     break;
                 }
                 String mes=mymsg.getText().toString();
-                LinkExtractor linkExtractor = LinkExtractor.builder()
-                        .linkTypes(EnumSet.of(LinkType.URL, LinkType.EMAIL, LinkType.WWW))
-                        .build();
-                Iterable<LinkSpan> links = linkExtractor.extractLinks(mes);
-                String result = Autolink.renderLinks(mes, links, new LinkRenderer() {
-                    @Override
-                    public void render(LinkSpan link, CharSequence text, StringBuilder sb) {
-                        sb.append("<a href=");
-                        sb.append(text, link.getBeginIndex(), link.getEndIndex());
-                        sb.append(">");
-                        sb.append(text, link.getBeginIndex(), link.getEndIndex());
-                        sb.append("</a>");
-                    }
-                });
-                Message message = new Message(user.getEmail(), result, getDate(), getTime(), String.valueOf(false));
+                Message message = new Message(user.getEmail(), mes, getDate(), getTime(), String.valueOf(false));
                 message.setSelf(true);
                 mDatabase.child("messages").push().setValue(message);
 //                messages.add(message);
