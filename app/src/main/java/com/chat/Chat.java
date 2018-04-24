@@ -7,19 +7,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.ActionMode;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import org.nibor.autolink.*;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -33,11 +31,10 @@ import com.google.firebase.database.ValueEventListener;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Chat extends AppCompatActivity implements View.OnClickListener, ChildEventListener, ActionMode.Callback {
+public class Chat extends AppCompatActivity implements View.OnClickListener, ChildEventListener {
 
     FirebaseAuth mAuth;
     EditText mymsg;
@@ -49,9 +46,6 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     FirebaseUser user;
     private DatabaseReference mDatabase;
     ProgressBar data;
-    Intent in;
-    private ActionMode actionMode;
-    public static final String URL_REGEX = "^((https?|ftp)://|(www|ftp)\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)+([/?].*)?$";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,10 +70,6 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         NotificationManager notificationManager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancelAll();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-//        DownloadMessage downloadMessage=new DownloadMessage();
-//        downloadMessage.execute();
-        //DisplayMessage();
-        String k;
         processStopService();
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -99,8 +89,6 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         //UpdateUI();
         System.out.println("Notif service running onCreate "+ isMyServiceRunning(NotifManager.class)+"");
     }
-
-
 
     private void processStartService() {
         Intent intent = new Intent(getApplicationContext(), NotifManager.class);
@@ -241,11 +229,6 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
             m.setSelf(false);
         }
         m.setTo(String.valueOf(b));
-        Pattern p = Pattern.compile(URL_REGEX);
-        Matcher ma = p.matcher(m.getMessage());
-        if(ma.find()) {
-            System.out.println("String contains URL");
-        }
         mDatabase.child("messages").child(ds.getKey()).setValue(m);
         messages.add(m);
         UpdateUI();
@@ -290,40 +273,6 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
 
     @Override
     public void onCancelled(DatabaseError databaseError) {
-
-    }
-
-    @Override
-    public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
-        getMenuInflater().inflate(R.menu.action_mode, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
-        return false;
-    }
-
-    @Override
-    public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-        switch (menuItem.getItemId()){
-            case R.id.copy:
-//                ArrayList<String> copied_mes = new ArrayList<>();
-//                for(int i=0; i<messages.size(); i++){
-//                    copied_mes.add(messages.get(i).getMessage());
-//                }
-//                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-//                ClipData clip = ClipData.newPlainText(label, text);
-//                clipboard.setPrimaryClip(clip);
-        }
-        return false;
-    }
-
-
-
-    @Override
-    public void onDestroyActionMode(ActionMode Mode) {
-        actionMode = null;
 
     }
 }

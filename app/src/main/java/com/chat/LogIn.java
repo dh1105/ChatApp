@@ -12,9 +12,13 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
 
 public class LogIn extends AppCompatActivity implements View.OnClickListener{
 
@@ -104,7 +108,20 @@ public class LogIn extends AppCompatActivity implements View.OnClickListener{
                         }
                         else{
                             hidProgressDia();
-                            Toast.makeText(LogIn.this, "Account does not exist", Toast.LENGTH_LONG).show();
+                            try{
+                                throw task.getException();
+                            } catch(FirebaseAuthInvalidCredentialsException f){
+                                f.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "Invalid login details", Toast.LENGTH_LONG).show();
+                            } catch(FirebaseAuthInvalidUserException c){
+                                c.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "User does not exist", Toast.LENGTH_LONG).show();
+                            } catch(FirebaseNetworkException d) {
+                                d.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_LONG).show();
+                            }catch (Exception e) {
+                                e.printStackTrace();
+                            }
                         }
 
 //                        if(!task.isSuccessful()){

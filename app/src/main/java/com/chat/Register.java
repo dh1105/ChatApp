@@ -13,8 +13,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseAuthUserCollisionException;
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException;
 
 public class Register extends AppCompatActivity implements View.OnClickListener {
 
@@ -57,7 +62,21 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
 
                         if(!task.isSuccessful()){
                             hidProgressDia();
-                            Toast.makeText(Register.this, "User already exists", Toast.LENGTH_SHORT).show();
+                            try{
+                                throw task.getException();
+                            } catch(FirebaseAuthInvalidCredentialsException b){
+                                b.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "Invalid Email", Toast.LENGTH_LONG).show();
+                            } catch(FirebaseAuthUserCollisionException c){
+                                c.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "User already exists", Toast.LENGTH_LONG).show();
+                            } catch(FirebaseNetworkException d) {
+                                d.printStackTrace();
+                                Toast.makeText(getApplicationContext(), "Network error", Toast.LENGTH_LONG).show();
+                            }catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            //Toast.makeText(Register.this, "User already exists", Toast.LENGTH_SHORT).show();
                         }
                         else{
                             hidProgressDia();
@@ -81,6 +100,13 @@ public class Register extends AppCompatActivity implements View.OnClickListener 
 
         if(!pass_1.equals(pass_2)){
             Toast.makeText(Register.this, "Please enter the same password twice", Toast.LENGTH_LONG).show();
+            this.pass_1.setText(null);
+            this.pass_2.setText(null);
+            return false;
+        }
+
+        if(pass_1.length()<6) {
+            Toast.makeText(Register.this, "Password should be 6 characters at least", Toast.LENGTH_LONG).show();
             this.pass_1.setText(null);
             this.pass_2.setText(null);
             return false;
