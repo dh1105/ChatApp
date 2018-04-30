@@ -1,6 +1,7 @@
 package com.chat;
 
 import android.app.AlarmManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -36,23 +37,13 @@ public class NotifManager extends Service implements ChildEventListener{
     FirebaseUser user;
     private DatabaseReference mDatabase;
     public static final String TAG = "NotifManager";
+    MessageNumber messageNumber;
 
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
         return null;
     }
-
-//    @Override
-//    public void onStart(Intent intent, int startId) {
-//        super.onStart(intent, startId);
-//        mAuth=FirebaseAuth.getInstance();
-//        user=mAuth.getCurrentUser();
-//        mDatabase = FirebaseDatabase.getInstance().getReference();
-//        //mDatabase.child("messages").addChildEventListener(this);
-//        Query lastQuery = mDatabase.child("messages").orderByKey().limitToLast(1);
-//        lastQuery.addChildEventListener(this);
-//    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -63,6 +54,9 @@ public class NotifManager extends Service implements ChildEventListener{
         //mDatabase.child("messages").addChildEventListener(this);
         Query lastQuery = mDatabase.child("messages").orderByKey().limitToLast(1);
         lastQuery.addChildEventListener(this);
+        messageNumber = new MessageNumber();
+        int n=0;
+        messageNumber.setMess(n);
         //Toast.makeText(getApplicationContext(), "Service onStartCommand called", Toast.LENGTH_SHORT).show();
         return START_STICKY;
     }
@@ -87,8 +81,13 @@ public class NotifManager extends Service implements ChildEventListener{
         boolean b = Boolean.parseBoolean(to);
         Log.d("User: ", user.getEmail());
         if (!m.getFromName().equals(user.getEmail()) && !b && !Helper.isAppRunning(getApplicationContext())){
+            Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            int n = messageNumber.getMess();
+            n++;
+            int id = 1;
             Log.d("VaL: ", "false");
-            sendNotif(fromName, me, time);
+            sendNotif(fromName, me, time, id, uri, n);
+            messageNumber.setMess(n);
             m.setSelf(false);
         }
         else {
@@ -123,10 +122,21 @@ public class NotifManager extends Service implements ChildEventListener{
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-    private void sendNotif(String fromName, String me, String time) {
-        Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+    private void sendNotif(String fromName, String me, String time, int id, Uri uri, int n) {
         Log.d("Uri ", uri.toString());
         long[] v = {250,500};
+
+        String mes;
+        if(n==1)
+            mes=n+" new message";
+        else
+            mes=n+" new messages";
+
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle()
+                .addLine(me)
+                .setSummaryText(mes)
+                .setBigContentTitle(fromName);
+
         NotificationCompat.Builder notif=new NotificationCompat.Builder(getApplicationContext())
                 .setSmallIcon(R.mipmap.ic_launcher_round)
                 .setContentTitle(fromName)
@@ -134,7 +144,9 @@ public class NotifManager extends Service implements ChildEventListener{
                 .setSubText(time)
                 .setSound(uri)
                 .setVibrate(v)
-                .setAutoCancel(true);
+                .setAutoCancel(true)
+                .setPriority(Notification.PRIORITY_HIGH)
+                .setStyle(inboxStyle);
 
         Intent res=new Intent(getApplicationContext(), Chat.class);
 
@@ -152,7 +164,7 @@ public class NotifManager extends Service implements ChildEventListener{
         notif.setContentIntent(in);
         NotificationManager manager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        manager.notify(0, notif.build());
+        manager.notify(id, notif.build());
     }
 
     @Override
