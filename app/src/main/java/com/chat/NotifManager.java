@@ -64,19 +64,20 @@ public class NotifManager extends Service implements ChildEventListener{
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @Override
     public void onChildAdded(DataSnapshot ds, String s) {
-        System.out.println("Notif Service DATA: "+ ds.toString() + " " + s);
         Message m = ds.getValue(Message.class);
         Log.d("MESS: ", m.toString());
         String fromName = ds.getValue(Message.class).getFromName();
         Log.d("From: ", fromName);
         String me = ds.getValue(Message.class).getMessage();
         Log.d("Mess: ", me);
-        String date = ds.getValue(Message.class).getDate();
+        //String date = ds.getValue(Message.class).getDate();
         String time = ds.getValue(Message.class).getTime();
-        m.setFromName(fromName);
-        m.setMessage(me);
-        m.setDate(date);
-        m.setTime(time);
+        String type = ds.getValue(Message.class).getType();
+//        m.setFromName(fromName);
+//        m.setMessage(me);
+//        m.setDate(date);
+//        m.setTime(time);
+//        m.setType(type);
         String to = ds.getValue(Message.class).getTo();
         boolean b = Boolean.parseBoolean(to);
         Log.d("User: ", user.getEmail());

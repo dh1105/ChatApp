@@ -14,16 +14,18 @@ public class Message {
     private String date;
     private String time;
     private String to;
+    private String type;
 
     public Message() {
     }
 
-    public Message(String fromName, String message, String date, String time, String to) {
+    public Message(String fromName, String message, String date, String time, String to, String type) {
         this.fromName = fromName;
         this.message = message;
         this.date = date;
         this.time=time;
         this.to = to;
+        this.type = type;
     }
 
     public String getTo() {
@@ -72,7 +74,15 @@ public class Message {
         this.time=time;
     }
 
-//    public String getDate() {
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    //    public String getDate() {
 //
 //        SimpleDateFormat sdf = new SimpleDateFormat("dd MMM yyyy");
 //

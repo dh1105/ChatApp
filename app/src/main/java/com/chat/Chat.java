@@ -1,11 +1,21 @@
 package com.chat;
 
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -17,7 +27,12 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.Manifest;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -26,7 +41,12 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,7 +62,11 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     String uid;
     FirebaseUser user;
     private DatabaseReference mDatabase;
+    private StorageReference imageRef;
     ProgressBar data;
+    private final int PERMISSIONS_ALL=1;
+    private final int GALLERY = 2;
+    private final int CAMERA = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +76,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         mAuth=FirebaseAuth.getInstance();
         user=mAuth.getCurrentUser();
         uid=user.getUid();
+        imageRef= FirebaseStorage.getInstance().getReference();
         mymsg=(EditText) findViewById(R.id.messageText);
         send=(FloatingActionButton) findViewById(R.id.sendButton);
         send.setOnClickListener(this);
@@ -85,6 +110,22 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         mDatabase.child("messages").addChildEventListener(this);
         //UpdateUI();
         System.out.println("Notif service running onCreate "+ isMyServiceRunning(NotifManager.class)+"");
+        String[] PERMISSIONS = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+
+        if(!hasPermissions(this, PERMISSIONS)){
+            ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSIONS_ALL);
+        }
+    }
+
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     private void processStartService() {
@@ -123,8 +164,52 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
                 Intent i=new Intent(this, LogIn.class);
                 startActivity(i);
                 finish();
+
+            case R.id.gallery:
+                startGallery();
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void startGallery() {
+        Intent gallery = new Intent();
+        gallery.setType("image/*");
+        gallery.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(gallery, "Select image"), GALLERY);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == GALLERY){
+            if(resultCode == RESULT_OK){
+                if(data!=null){
+                    Uri imageUri = data.getData();
+
+                    StorageReference filepath = imageRef.child("message_images").child(imageUri.toString()+".jpg");
+
+                    filepath.putFile(imageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                            if(task.isSuccessful()){
+                                String down = task.getResult().getDownloadUrl().toString();
+                                Message message = new Message(user.getEmail(), down, getDate(), getTime(), String.valueOf(false), "image");
+                                message.setSelf(true);
+                                mDatabase.child("messages").push().setValue(message);
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            e.printStackTrace();
+                            Toast.makeText(getApplicationContext(), "Error sending image", Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    messageList.scrollToPosition(messages.size() - 1);
+                }
+            }
+        }
     }
 
     private boolean validateEntry(){
@@ -146,7 +231,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
                     break;
                 }
                 String mes=mymsg.getText().toString();
-                Message message = new Message(user.getEmail(), mes, getDate(), getTime(), String.valueOf(false));
+                Message message = new Message(user.getEmail(), mes, getDate(), getTime(), String.valueOf(false), "text");
                 message.setSelf(true);
                 mDatabase.child("messages").push().setValue(message);
 //                messages.add(message);
@@ -201,21 +286,23 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     public void onChildAdded(DataSnapshot ds, String s) {
         System.out.println("DATA: "+ ds.toString() + " " + s);
         Message m = ds.getValue(Message.class);
-        Log.d("MESS: ", m.toString());
-        Log.d("UID: ", uid);
-        String fromName = ds.getValue(Message.class).getFromName();
-        Log.d("From: ", fromName);
-        String me = ds.getValue(Message.class).getMessage();
-        Log.d("Mess: ", me);
-        String date = ds.getValue(Message.class).getDate();
-        String time = ds.getValue(Message.class).getTime();
+//        Log.d("MESS: ", m.toString());
+//        Log.d("UID: ", uid);
+//        String fromName = ds.getValue(Message.class).getFromName();
+//        Log.d("From: ", fromName);
+//        String me = ds.getValue(Message.class).getMessage();
+//        Log.d("Mess: ", me);
+//        String date = ds.getValue(Message.class).getDate();
+//        String time = ds.getValue(Message.class).getTime();
         String to = ds.getValue(Message.class).getTo();
+//        String type = ds.getValue(Message.class).getType();
+//        Log.d("Type: ", type);
         Boolean b = Boolean.parseBoolean(to);
-        Log.d("Message seen user: ", String.valueOf(b));
-        m.setFromName(fromName);
-        m.setMessage(me);
-        m.setDate(date);
-        m.setTime(time);
+//        m.setFromName(fromName);
+//        m.setMessage(me);
+//        m.setDate(date);
+//        m.setTime(time);
+//        m.setType(type);
         if (m.getFromName().equals(user.getEmail())){
             Log.d("VaL: ", "true");
             m.setSelf(true);
@@ -225,8 +312,8 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
             b = true;
             m.setSelf(false);
         }
-        m.setTo(String.valueOf(b));
-        mDatabase.child("messages").child(ds.getKey()).setValue(m);
+        //m.setTo(String.valueOf(b));
+        mDatabase.child("messages").child(ds.getKey()).child("to").setValue(String.valueOf(b));
         messages.add(m);
         UpdateUI();
         mAdapter.notifyDataSetChanged();
