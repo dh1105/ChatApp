@@ -40,21 +40,15 @@
             android:text="message"
             android:textSize="10pt" />
 
-        <ProgressBar
-            android:id="@+id/prog_rec2"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:indeterminate="true"
-            android:visibility="gone" />
-
         <ImageView
             android:id="@+id/image_sent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
+            android:paddingBottom="10dp"
             android:paddingLeft="10dp"
             android:paddingRight="10dp"
+            android:paddingTop="10dp"
             android:scaleType="centerCrop"
             android:visibility="gone" />
 

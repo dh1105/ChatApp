@@ -9,7 +9,7 @@
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
@@ -40,25 +40,28 @@
         </service>
 
         <activity android:name=".LogIn" />
-        <activity android:name=".Chat" />
-        <activity android:name=".Register"
-            android:parentActivityName="LogIn">
-        </activity>
+        <activity android:name=".Chat"
+            android:launchMode="singleTop"/>
+        <activity
+            android:name=".Register"
+            android:parentActivityName=".LogIn"></activity>
 
-        <receiver
-            android:name=".NotifBroad">
+        <receiver android:name=".NotifBroad">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action
+                    android:name="android.net.conn.CONNECTIVITY_CHANGE"
                     tools:ignore="BatteryLife" />
-                <action android:name="WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION"/>
+                <action android:name="WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION" />
                 <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
                 <action android:name="android.net.wifi.STATE_CHANGE" />
             </intent-filter>
         </receiver>
 
-        <service android:name=".NotifManager"/>
+        <service android:name=".NotifManager" />
 
+        <activity android:name=".ViewImage"
+            android:parentActivityName=".Chat"></activity>
     </application>
 
 </manifest>
