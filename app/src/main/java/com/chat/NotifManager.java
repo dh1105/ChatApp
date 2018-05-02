@@ -27,6 +27,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
+import java.util.ArrayList;
+
 /**
  * Created by user on 4/6/2018.
  */
@@ -37,7 +39,8 @@ public class NotifManager extends Service implements ChildEventListener{
     FirebaseUser user;
     private DatabaseReference mDatabase;
     public static final String TAG = "NotifManager";
-    MessageNumber messageNumber;
+    private static final int ON_GOING = 1;
+    ArrayList<String> unread;
 
     @Nullable
     @Override
@@ -54,9 +57,8 @@ public class NotifManager extends Service implements ChildEventListener{
         //mDatabase.child("messages").addChildEventListener(this);
         Query lastQuery = mDatabase.child("messages").orderByKey().limitToLast(1);
         lastQuery.addChildEventListener(this);
-        messageNumber = new MessageNumber();
         int n=0;
-        messageNumber.setMess(n);
+        unread = new ArrayList<>();
         //Toast.makeText(getApplicationContext(), "Service onStartCommand called", Toast.LENGTH_SHORT).show();
         return START_STICKY;
     }
@@ -83,12 +85,11 @@ public class NotifManager extends Service implements ChildEventListener{
         Log.d("User: ", user.getEmail());
         if (!m.getFromName().equals(user.getEmail()) && !b && !Helper.isAppRunning(getApplicationContext())){
             Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-            int n = messageNumber.getMess();
-            n++;
-            int id = 1;
+            unread.add(me);
             Log.d("VaL: ", "false");
-            sendNotif(fromName, me, time, id, uri, n);
-            messageNumber.setMess(n);
+            NotificationManager manager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            Notification notification = sendNotif(fromName, me, time, uri);
+            manager.notify(ON_GOING, notification);
             m.setSelf(false);
         }
         else {
@@ -123,19 +124,24 @@ public class NotifManager extends Service implements ChildEventListener{
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
-    private void sendNotif(String fromName, String me, String time, int id, Uri uri, int n) {
+    private Notification sendNotif(String fromName, String me, String time, Uri uri) {
         Log.d("Uri ", uri.toString());
         long[] v = {250,500};
 
         String mes;
+        int n = unread.size();
         if(n==1)
             mes=n+" new message";
         else
             mes=n+" new messages";
 
-        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle()
-                .addLine(me)
-                .setSummaryText(mes)
+        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+
+        for(int i=0; i<n; i++){
+            inboxStyle.addLine(unread.get(i));
+        }
+
+        inboxStyle.setSummaryText(mes)
                 .setBigContentTitle(fromName);
 
         NotificationCompat.Builder notif=new NotificationCompat.Builder(getApplicationContext())
@@ -163,9 +169,8 @@ public class NotifManager extends Service implements ChildEventListener{
 //        PendingIntent in = PendingIntent.getBroadcast(getApplicationContext(), 1, i, 0);
 
         notif.setContentIntent(in);
-        NotificationManager manager=(NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        manager.notify(id, notif.build());
+        return notif.getNotification();
     }
 
     @Override
