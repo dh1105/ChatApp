@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mymsg_layout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
@@ -12,8 +13,8 @@
         android:layout_marginBottom="2pt"
         android:layout_marginLeft="20pt"
         android:layout_marginRight="10dp"
-        android:background="@drawable/bg_message_right"
         android:layout_marginTop="2pt"
+        android:background="@drawable/bg_message_right"
         android:orientation="vertical">
 
         <TextView

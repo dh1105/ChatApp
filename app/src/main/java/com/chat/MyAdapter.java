@@ -2,14 +2,19 @@ package com.chat;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.RecyclerView;
 import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.util.SparseBooleanArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.squareup.picasso.Callback;
@@ -29,17 +34,21 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VIEW_HOLDER_TYPE_1=1;
     private static final int VIEW_HOLDER_TYPE_2=2;
+    ActionMode actionMode;
+    private SparseBooleanArray mSelectedItemsIds;
 
     public static class ViewHolder_Type1 extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView mymessageTextView, mytimeTextView;
         public ImageView myimage;
+        RelativeLayout mymsg_layout;
 
         public ViewHolder_Type1(View v) {
             super(v);
             this.mymessageTextView = (TextView) v.findViewById(R.id.mymessageTextView);
             this.mytimeTextView = (TextView) v.findViewById(R.id.mytimeTextView);
             this.myimage = (ImageView) v.findViewById(R.id.image_sent);
+            this.mymsg_layout = (RelativeLayout) v.findViewById(R.id.mymsg_layout);
         }
     }
 
@@ -47,12 +56,14 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         // each data item is just a string in this case
         public TextView messageTextView, timeTextView;
         public ImageView recimage;
+        RelativeLayout msg_layout;
 
         public ViewHolder_Type2(View v) {
             super(v);
             this.messageTextView = (TextView) v.findViewById(R.id.messageTextView);
             this.timeTextView = (TextView) v.findViewById(R.id.timeTextView);
             this.recimage = (ImageView) v.findViewById(R.id.image_Rec);
+            this.msg_layout = (RelativeLayout) v.findViewById(R.id.msg_layout);
         }
     }
 
@@ -60,6 +71,7 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public MyAdapter(Context context, ArrayList<Message> messages) {
         this.context = context;
         this.messages = messages;
+        mSelectedItemsIds = new SparseBooleanArray();
     }
 
     @Override
@@ -107,9 +119,11 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     myimageView.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Intent in = new Intent(context, ViewImage.class);
-                            in.putExtra("img", messages.get(position).getMessage());
-                            context.startActivity(in);
+                            if(getSelectedCount()==0) {
+                                Intent in = new Intent(context, ViewImage.class);
+                                in.putExtra("img", messages.get(position).getMessage());
+                                context.startActivity(in);
+                            }
                         }
                     });
                 }
@@ -125,6 +139,9 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
                     //mymsgView.setText(messages.get(position).getMessage());
                 }
+                RelativeLayout my_rel = viewholder1.mymsg_layout;
+                my_rel.setBackgroundColor(mSelectedItemsIds.get(position) ? 0x9934B5E4
+                        : Color.TRANSPARENT);
                 break;
 
             case VIEW_HOLDER_TYPE_2:
@@ -140,9 +157,11 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     myimageView1.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Intent in = new Intent(context, ViewImage.class);
-                            in.putExtra("img", messages.get(position).getMessage());
-                            context.startActivity(in);
+                            if(getSelectedCount()==0) {
+                                Intent in = new Intent(context, ViewImage.class);
+                                in.putExtra("img", messages.get(position).getMessage());
+                                context.startActivity(in);
+                            }
                         }
                     });
                 }
@@ -158,6 +177,9 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                     }
                 }
                 //msgView.setText(messages.get(position).getMessage());
+                RelativeLayout my_rel1 = viewholder2.msg_layout;
+                my_rel1.setBackgroundColor(mSelectedItemsIds.get(position) ? 0x9934B5E4
+                        : Color.TRANSPARENT);
                 break;
 
             default:
@@ -173,6 +195,38 @@ public class MyAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return VIEW_HOLDER_TYPE_1;
         else
             return VIEW_HOLDER_TYPE_2;
+    }
+
+    public void toggleSelection(int position) {
+        selectView(position, !mSelectedItemsIds.get(position));
+    }
+
+
+    //Remove selected selections
+    public void removeSelection() {
+        mSelectedItemsIds = new SparseBooleanArray();
+        notifyDataSetChanged();
+    }
+
+
+    //Put or delete selected position into SparseBooleanArray
+    public void selectView(int position, boolean value) {
+        if (value)
+            mSelectedItemsIds.put(position, value);
+        else
+            mSelectedItemsIds.delete(position);
+
+        notifyDataSetChanged();
+    }
+
+    //Get total selected count
+    public int getSelectedCount() {
+        return mSelectedItemsIds.size();
+    }
+
+    //Return all selected ids
+    public SparseBooleanArray getSelectedIds() {
+        return mSelectedItemsIds;
     }
 
     @Override

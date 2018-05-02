@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.ActionMode;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -56,7 +57,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     FirebaseAuth mAuth;
     EditText mymsg;
     FloatingActionButton send;
-    RecyclerView.Adapter mAdapter=null;
+    MyAdapter mAdapter;
     ArrayList<Message> messages=null;
     RecyclerView messageList;
     String uid;
@@ -67,6 +68,7 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
     private final int PERMISSIONS_ALL=1;
     private final int GALLERY = 2;
     private final int CAMERA = 3;
+    static ActionMode mActionMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,7 +117,41 @@ public class Chat extends AppCompatActivity implements View.OnClickListener, Chi
         if(!hasPermissions(this, PERMISSIONS)){
             ActivityCompat.requestPermissions(this, PERMISSIONS, PERMISSIONS_ALL);
         }
+        messageList.addOnItemTouchListener(new RecyclerTouchListener(this, messageList, new RecyclerClick_Listener() {
+            @Override
+            public void onClick(View view, int position) {
+                //If ActionMode not null select item
+                if (mActionMode != null && messages.get(position).getType().equals("text"))
+                    onListItemSelect(position);
+            }
+            @Override
+            public void onLongClick(View view, int position) {
+                //Select item on long click
+                if(messages.get(position).getType().equals("text"))
+                    onListItemSelect(position);
+            }
+        }));
     }
+
+    private void onListItemSelect(int position) {
+        mAdapter.toggleSelection(position);//Toggle the selection
+        boolean hasCheckedItems = mAdapter.getSelectedCount() > 0;//Check if any items are already selected or not
+        if (hasCheckedItems && mActionMode == null)
+            // there are some selected items, start the actionMode
+            mActionMode = ((AppCompatActivity) this).startSupportActionMode(new Toolbar_ActionMode_Callback(this, mAdapter, messages, false));
+        else if (!hasCheckedItems && mActionMode != null)
+            // there no selected items, finish the actionMode
+            mActionMode.finish();
+        if (mActionMode != null)
+            //set action mode title on item selection
+            mActionMode.setTitle(String.valueOf(mAdapter.getSelectedCount()) + " selected");
+    }
+    //Set action mode null after use
+    public static void setNullToActionMode() {
+        if (mActionMode != null)
+            mActionMode = null;
+    }
+
 
     public static boolean hasPermissions(Context context, String... permissions) {
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {

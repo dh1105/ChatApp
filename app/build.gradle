@@ -36,6 +36,7 @@ dependencies {
     compile 'org.nibor.autolink:autolink:0.7.0'
     compile 'com.squareup.picasso:picasso:2.71828'
     compile 'com.jsibbold:zoomage:1.1.0'
+    compile 'id.zelory:compressor:2.1.0'
     testCompile 'junit:junit:4.12'
 }
 
